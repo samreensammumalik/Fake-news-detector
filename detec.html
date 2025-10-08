@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TruthLens - AI-Powered Fake News Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .verification-badge {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-full bg-gray-50">
+    <div id="app" class="min-h-full">
+        <!-- Authentication Pages -->
+        <div id="auth-container" class="min-h-screen gradient-bg flex items-center justify-center">
+            <!-- Login Form -->
+            <div id="login-form" class="max-w-md w-full bg-white rounded-lg shadow-xl p-8 mx-4 slide-in">
+                <div class="text-center mb-8">
+                    <div class="text-4xl mb-4">🔍</div>
+                    <h1 class="text-3xl font-bold text-gray-900">TruthLens</h1>
+                    <p class="text-gray-600 mt-2">Sign in to detect fake news</p>
+                </div>
+
+                <form onsubmit="handleLogin(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="login-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter your email" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="login-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors font-medium">Sign In</button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <button onclick="showSignupForm()" class="text-purple-600 hover:text-purple-700 text-sm font-medium">Don't have an account? Sign up</button>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex">
+                            <div class="text-blue-400 mr-3">ℹ️</div>
+                            <div>
+                                <p class="text-sm text-blue-800"><strong>Demo Credentials:</strong></p>
+                                <p class="text-xs text-blue-700 mt-1">Email: demo@truthlens.com<br>Password: demo123</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signup-form" class="max-w-md w-full bg-white rounded-lg shadow-xl p-8 mx-4 slide-in hidden">
+                <div class="text-center mb-8">
+                    <div class="text-4xl mb-4">🔍</div>
+                    <h1 class="text-3xl font-bold text-gray-900">Join TruthLens</h1>
+                    <p class="text-gray-600 mt-2">Create your account today</p>
+                </div>
+
+                <form onsubmit="handleSignup(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" id="signup-name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" id="signup-email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter your email" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" id="signup-password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Create a password" required minlength="6">
+                    </div>
+                    <button type="submit" class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors font-medium">Create Account</button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <button onclick="showLoginForm()" class="text-purple-600 hover:text-purple-700 text-sm font-medium">Already have an account? Sign in</button>
+                </div>
+
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex">
+                            <div class="text-green-400 mr-3">✨</div>
+                            <div>
+                                <p class="text-sm text-green-800"><strong>Demo Mode:</strong> Any email and password (6+ chars) will work for testing!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Application (Hidden until authenticated) -->
+        <div id="main-app" class="hidden">
+            <!-- Navigation -->
+            <nav class="gradient-bg shadow-lg">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <div class="flex items-center">
+                            <div class="text-white text-2xl font-bold">🔍 TruthLens</div>
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="ml-10 flex items-baseline space-x-4">
+                                <button onclick="showPage('home')" class="nav-btn text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</button>
+                                <button onclick="showPage('detector')" class="nav-btn text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-colors">Detector</button>
+                                <button onclick="showPage('history')" class="nav-btn text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-colors">History</button>
+                                <div class="flex items-center space-x-3">
+                                    <span class="text-white text-sm">Welcome, <span id="user-name" class="font-medium"></span></span>
+                                    <button onclick="logout()" class="text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Home Page -->
+            <div id="home-page" class="page">
+                <div class="gradient-bg min-h-96">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                        <div class="text-center">
+                            <h1 class="text-5xl font-bold text-white mb-6">Combat Misinformation with AI</h1>
+                            <p class="text-xl text-white mb-8 max-w-3xl mx-auto">TruthLens uses advanced AI to verify news articles, images, URLs, and social media posts. Get instant credibility scores and detailed analysis.</p>
+                            <button onclick="showPage('detector')" class="bg-white text-purple-600 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors">Start Detecting</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <div class="card-hover bg-white p-6 rounded-lg shadow-lg text-center">
+                            <div class="text-4xl mb-4">📰</div>
+                            <h3 class="text-xl font-semibold mb-2">Article Analysis</h3>
+                            <p class="text-gray-600">Comprehensive fact-checking of news articles with source verification</p>
+                        </div>
+                        <div class="card-hover bg-white p-6 rounded-lg shadow-lg text-center">
+                            <div class="text-4xl mb-4">🖼️</div>
+                            <h3 class="text-xl font-semibold mb-2">Image Verification</h3>
+                            <p class="text-gray-600">Detect manipulated images and reverse image search</p>
+                        </div>
+                        <div class="card-hover bg-white p-6 rounded-lg shadow-lg text-center">
+                            <div class="text-4xl mb-4">📱</div>
+                            <h3 class="text-xl font-semibold mb-2">Social Media Check</h3>
+                            <p class="text-gray-600">Verify posts from Twitter, Facebook, and other platforms</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detector Page -->
+            <div id="detector-page" class="page hidden">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-8">Fake News Detector</h1>
+                    
+                    <!-- Detection Type Tabs -->
+                    <div class="mb-8">
+                        <div class="border-b border-gray-200">
+                            <nav class="-mb-px flex space-x-8">
+                                <button onclick="showDetectorTab('article')" class="detector-tab active border-purple-500 text-purple-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">Article Analysis</button>
+                                <button onclick="showDetectorTab('image')" class="detector-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">Image Verification</button>
+                                <button onclick="showDetectorTab('url')" class="detector-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">URL Check</button>
+                                <button onclick="showDetectorTab('social')" class="detector-tab border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">Social Media</button>
+                            </nav>
+                        </div>
+                    </div>
+
+                    <!-- Article Analysis Tab -->
+                    <div id="article-tab" class="detector-content">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4">Analyze News Article</h2>
+                            <form onsubmit="analyzeArticle(event)">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Article Title</label>
+                                    <input type="text" id="article-title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Enter article title">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Article Content</label>
+                                    <textarea id="article-content" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Paste the full article content here..."></textarea>
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Source URL (Optional)</label>
+                                    <input type="url" id="article-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="https://example.com/article">
+                                </div>
+                                <button type="submit" class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors">Analyze Article</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Image Verification Tab -->
+                    <div id="image-tab" class="detector-content hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4">Verify Image Authenticity</h2>
+                            <form onsubmit="analyzeImage(event)">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Image URL</label>
+                                    <input type="url" id="image-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="https://example.com/image.jpg">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Image Context (Optional)</label>
+                                    <textarea id="image-context" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Describe where you found this image or what it claims to show..."></textarea>
+                                </div>
+                                <div class="mb-6">
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                                        <div class="text-4xl mb-2">📷</div>
+                                        <p class="text-gray-500">Image preview will appear here</p>
+                                        <div id="image-preview" class="mt-4 hidden">
+                                            <img id="preview-img" class="max-w-full h-64 object-contain mx-auto rounded-lg" alt="Image preview">
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors">Verify Image</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- URL Check Tab -->
+                    <div id="url-tab" class="detector-content hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4">Check Website Credibility</h2>
+                            <form onsubmit="analyzeURL(event)">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Website URL</label>
+                                    <input type="url" id="check-url" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="https://example.com">
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                                    <textarea id="url-notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Any specific concerns about this website..."></textarea>
+                                </div>
+                                <button type="submit" class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors">Check Website</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Social Media Tab -->
+                    <div id="social-tab" class="detector-content hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4">Verify Social Media Post</h2>
+                            <form onsubmit="analyzeSocial(event)">
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Platform</label>
+                                    <select id="social-platform" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                        <option value="twitter">Twitter</option>
+                                        <option value="facebook">Facebook</option>
+                                        <option value="instagram">Instagram</option>
+                                        <option value="tiktok">TikTok</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Post URL or Content</label>
+                                    <textarea id="social-content" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="Paste the post URL or copy the post content here..."></textarea>
+                                </div>
+                                <div class="mb-6">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Author/Account</label>
+                                    <input type="text" id="social-author" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500" placeholder="@username or account name">
+                                </div>
+                                <button type="submit" class="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 transition-colors">Verify Post</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="results-section" class="mt-8 hidden">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h2 class="text-xl font-semibold mb-4">Analysis Results</h2>
+                            <div id="loading" class="text-center py-8 hidden">
+                                <div class="loading-spinner mx-auto mb-4"></div>
+                                <p class="text-gray-600">Analyzing content...</p>
+                            </div>
+                            <div id="results-content" class="hidden">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Page -->
+            <div id="history-page" class="page hidden">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-8">Analysis History</h1>
+                    <div id="history-list" class="space-y-4">
+                        <!-- History items will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let analysisHistory = [];
+        let currentPage = 'home';
+        let isAuthenticated = false;
+        let currentUser = null;
+
+        // Authentication functions
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            // Demo authentication - accept demo credentials or any valid email/password
+            if ((email === 'demo@truthlens.com' && password === 'demo123') || 
+                (email.includes('@') && password.length >= 6)) {
+                
+                // Simulate login process
+                const submitBtn = event.target.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+                submitBtn.disabled = true;
+                
+                setTimeout(() => {
+                    // Set user as authenticated
+                    isAuthenticated = true;
+                    currentUser = {
+                        name: email === 'demo@truthlens.com' ? 'Demo User' : email.split('@')[0],
+                        email: email
+                    };
+                    
+                    // Show main app
+                    document.getElementById('auth-container').classList.add('hidden');
+                    document.getElementById('main-app').classList.remove('hidden');
+                    document.getElementById('user-name').textContent = currentUser.name;
+                    
+                    // Show home page
+                    showPage('home');
+                    
+                    // Show success message
+                    showNotification('Welcome to TruthLens! 🎉', 'success');
+                }, 1500);
+            } else {
+                showNotification('Invalid credentials. Try demo@truthlens.com / demo123', 'error');
+            }
+        }
+
+        function handleSignup(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            
+            if (name && email.includes('@') && password.length >= 6) {
+                // Simulate signup process
+                const submitBtn = event.target.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+                submitBtn.disabled = true;
+                
+                setTimeout(() => {
+                    // Set user as authenticated
+                    isAuthenticated = true;
+                    currentUser = {
+                        name: name,
+                        email: email
+                    };
+                    
+                    // Show main app
+                    document.getElementById('auth-container').classList.add('hidden');
+                    document.getElementById('main-app').classList.remove('hidden');
+                    document.getElementById('user-name').textContent = currentUser.name;
+                    
+                    // Show home page
+                    showPage('home');
+                    
+                    // Show success message
+                    showNotification('Account created successfully! Welcome to TruthLens! 🎉', 'success');
+                }, 1500);
+            } else {
+                showNotification('Please fill all fields correctly (password min 6 chars)', 'error');
+            }
+        }
+
+        function showLoginForm() {
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+        }
+
+        function showSignupForm() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-form').classList.remove('hidden');
+        }
+
+        function logout() {
+            isAuthenticated = false;
+            currentUser = null;
+            
+            // Reset forms
+            document.getElementById('login-form').reset();
+            document.getElementById('signup-form').reset();
+            
+            // Show auth container
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('auth-container').classList.remove('hidden');
+            showLoginForm();
+            
+            showNotification('Logged out successfully', 'info');
+        }
+
+        // Notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm slide-in ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Page navigation (only works when authenticated)
+        function showPage(page) {
+            if (!isAuthenticated) return;
+            
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            
+            // Show selected page
+            document.getElementById(page + '-page').classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'bg-opacity-20');
+            });
+            
+            currentPage = page;
+            
+            // Load history if on history page
+            if (page === 'history') {
+                loadHistory();
+            }
+        }
+
+        // Detector tab navigation
+        function showDetectorTab(tab) {
+            // Hide all detector content
+            document.querySelectorAll('.detector-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tab + '-tab').classList.remove('hidden');
+            
+            // Update tab styling
+            document.querySelectorAll('.detector-tab').forEach(tabBtn => {
+                tabBtn.classList.remove('border-purple-500', 'text-purple-600', 'active');
+                tabBtn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            event.target.classList.remove('border-transparent', 'text-gray-500');
+            event.target.classList.add('border-purple-500', 'text-purple-600', 'active');
+            
+            // Hide results when switching tabs
+            document.getElementById('results-section').classList.add('hidden');
+        }
+
+        // Analysis functions
+        function analyzeArticle(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('article-title').value;
+            const content = document.getElementById('article-content').value;
+            const url = document.getElementById('article-url').value;
+            
+            if (!title || !content) {
+                showNotification('Please fill in both title and content fields.', 'error');
+                return;
+            }
+            
+            showResults();
+            simulateAnalysis('article', { title, content, url });
+        }
+
+        function analyzeImage(event) {
+            event.preventDefault();
+            
+            const imageUrl = document.getElementById('image-url').value;
+            const context = document.getElementById('image-context').value;
+            
+            if (!imageUrl) {
+                showNotification('Please provide an image URL.', 'error');
+                return;
+            }
+            
+            // Show image preview
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            previewImg.src = imageUrl;
+            preview.classList.remove('hidden');
+            
+            showResults();
+            simulateAnalysis('image', { imageUrl, context });
+        }
+
+        function analyzeURL(event) {
+            event.preventDefault();
+            
+            const url = document.getElementById('check-url').value;
+            const notes = document.getElementById('url-notes').value;
+            
+            if (!url) {
+                showNotification('Please provide a URL to check.', 'error');
+                return;
+            }
+            
+            showResults();
+            simulateAnalysis('url', { url, notes });
+        }
+
+        function analyzeSocial(event) {
+            event.preventDefault();
+            
+            const platform = document.getElementById('social-platform').value;
+            const content = document.getElementById('social-content').value;
+            const author = document.getElementById('social-author').value;
+            
+            if (!content) {
+                showNotification('Please provide post content or URL.', 'error');
+                return;
+            }
+            
+            showResults();
+            simulateAnalysis('social', { platform, content, author });
+        }
+
+        function showResults() {
+            document.getElementById('results-section').classList.remove('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('results-content').classList.add('hidden');
+        }
+
+        function simulateAnalysis(type, data) {
+            // Simulate API call delay
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('results-content').classList.remove('hidden');
+                
+                const results = generateMockResults(type, data);
+                displayResults(results);
+                
+                // Add to history
+                analysisHistory.unshift({
+                    id: Date.now(),
+                    type: type,
+                    data: data,
+                    results: results,
+                    timestamp: new Date().toISOString(),
+                    user: currentUser.email
+                });
+                
+                // Limit history to 50 items
+                if (analysisHistory.length > 50) {
+                    analysisHistory = analysisHistory.slice(0, 50);
+                }
+                
+                showNotification('Analysis completed!', 'success');
+            }, 2000);
+        }
+
+        function generateMockResults(type, data) {
+            const credibilityScore = Math.floor(Math.random() * 40) + 60; // 60-100
+            const riskLevel = credibilityScore > 85 ? 'Low' : credibilityScore > 70 ? 'Medium' : 'High';
+            const riskColor = credibilityScore > 85 ? 'green' : credibilityScore > 70 ? 'yellow' : 'red';
+            
+            const baseResults = {
+                credibilityScore: credibilityScore,
+                riskLevel: riskLevel,
+                riskColor: riskColor,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            switch (type) {
+                case 'article':
+                    return {
+                        ...baseResults,
+                        title: data.title,
+                        sourceReliability: Math.floor(Math.random() * 30) + 70,
+                        factCheckStatus: credibilityScore > 80 ? 'Verified' : credibilityScore > 60 ? 'Partially Verified' : 'Disputed',
+                        biasDetection: ['Neutral', 'Slightly Left', 'Slightly Right', 'Mixed'][Math.floor(Math.random() * 4)],
+                        keyFindings: [
+                            'Source has good reputation in journalism',
+                            'Claims are supported by multiple sources',
+                            'No obvious signs of manipulation detected',
+                            'Writing style consistent with legitimate news'
+                        ]
+                    };
+                    
+                case 'image':
+                    return {
+                        ...baseResults,
+                        imageUrl: data.imageUrl,
+                        manipulationDetected: credibilityScore < 70,
+                        reverseSearchResults: Math.floor(Math.random() * 100) + 50,
+                        originalSource: 'Getty Images',
+                        keyFindings: [
+                            'No digital manipulation detected',
+                            'Image found in multiple legitimate sources',
+                            'Metadata appears authentic',
+                            'No reverse image search red flags'
+                        ]
+                    };
+                    
+                case 'url':
+                    return {
+                        ...baseResults,
+                        domain: new URL(data.url).hostname,
+                        domainAge: Math.floor(Math.random() * 10) + 2 + ' years',
+                        sslCertificate: true,
+                        reputationScore: credibilityScore,
+                        keyFindings: [
+                            'Domain has established history',
+                            'SSL certificate is valid',
+                            'No malware detected',
+                            'Content quality appears legitimate'
+                        ]
+                    };
+                    
+                case 'social':
+                    return {
+                        ...baseResults,
+                        platform: data.platform,
+                        author: data.author,
+                        accountVerified: Math.random() > 0.5,
+                        accountAge: Math.floor(Math.random() * 5) + 1 + ' years',
+                        followerCount: Math.floor(Math.random() * 100000) + 1000,
+                        keyFindings: [
+                            'Account has consistent posting history',
+                            'No bot-like behavior detected',
+                            'Content aligns with account theme',
+                            'Engagement patterns appear organic'
+                        ]
+                    };
+            }
+        }
+
+        function displayResults(results) {
+            const resultsContent = document.getElementById('results-content');
+            
+            resultsContent.innerHTML = `
+                <div class="verification-badge">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center">
+                            <div class="w-16 h-16 rounded-full bg-${results.riskColor}-100 flex items-center justify-center mr-4">
+                                <span class="text-2xl font-bold text-${results.riskColor}-600">${results.credibilityScore}</span>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold">Credibility Score</h3>
+                                <p class="text-${results.riskColor}-600 font-medium">${results.riskLevel} Risk</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Analyzed on</p>
+                            <p class="text-sm font-medium">${results.timestamp}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-2">Key Metrics</h4>
+                            <div class="space-y-2 text-sm">
+                                ${results.sourceReliability ? `<div class="flex justify-between"><span>Source Reliability:</span><span class="font-medium">${results.sourceReliability}%</span></div>` : ''}
+                                ${results.factCheckStatus ? `<div class="flex justify-between"><span>Fact Check Status:</span><span class="font-medium">${results.factCheckStatus}</span></div>` : ''}
+                                ${results.biasDetection ? `<div class="flex justify-between"><span>Bias Detection:</span><span class="font-medium">${results.biasDetection}</span></div>` : ''}
+                                ${results.manipulationDetected !== undefined ? `<div class="flex justify-between"><span>Manipulation:</span><span class="font-medium">${results.manipulationDetected ? 'Detected' : 'None'}</span></div>` : ''}
+                                ${results.reverseSearchResults ? `<div class="flex justify-between"><span>Reverse Search:</span><span class="font-medium">${results.reverseSearchResults} results</span></div>` : ''}
+                                ${results.domainAge ? `<div class="flex justify-between"><span>Domain Age:</span><span class="font-medium">${results.domainAge}</span></div>` : ''}
+                                ${results.accountVerified !== undefined ? `<div class="flex justify-between"><span>Account Verified:</span><span class="font-medium">${results.accountVerified ? 'Yes' : 'No'}</span></div>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-semibold mb-2">Key Findings</h4>
+                            <ul class="text-sm space-y-1">
+                                ${results.keyFindings.map(finding => `<li class="flex items-start"><span class="text-green-500 mr-2">✓</span>${finding}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-blue-800 mb-2">💡 Recommendation</h4>
+                        <p class="text-blue-700 text-sm">
+                            ${results.credibilityScore > 85 
+                                ? 'This content appears to be reliable. However, always cross-reference with multiple sources for important information.'
+                                : results.credibilityScore > 70 
+                                ? 'This content has moderate credibility. Consider verifying key claims with additional sources before sharing.'
+                                : 'This content shows signs of low credibility. Exercise caution and seek verification from trusted sources before believing or sharing.'
+                            }
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadHistory() {
+            const historyList = document.getElementById('history-list');
+            
+            if (analysisHistory.length === 0) {
+                historyList.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-6xl mb-4">📊</div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">No Analysis History</h3>
+                        <p class="text-gray-600 mb-4">Start analyzing content to see your history here.</p>
+                        <button onclick="showPage('detector')" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors">Start Analyzing</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            historyList.innerHTML = analysisHistory.map(item => `
+                <div class="bg-white rounded-lg shadow-lg p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 rounded-full bg-${item.results.riskColor}-100 flex items-center justify-center mr-4">
+                                <span class="text-lg font-bold text-${item.results.riskColor}-600">${item.results.credibilityScore}</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold capitalize">${item.type} Analysis</h3>
+                                <p class="text-sm text-gray-500">${new Date(item.timestamp).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium bg-${item.results.riskColor}-100 text-${item.results.riskColor}-800">
+                            ${item.results.riskLevel} Risk
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        ${item.type === 'article' ? `<strong>Title:</strong> ${item.data.title}` : ''}
+                        ${item.type === 'image' ? `<strong>Image:</strong> ${item.data.imageUrl}` : ''}
+                        ${item.type === 'url' ? `<strong>URL:</strong> ${item.data.url}` : ''}
+                        ${item.type === 'social' ? `<strong>Platform:</strong> ${item.data.platform} | <strong>Author:</strong> ${item.data.author}` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Image URL preview
+        document.getElementById('image-url').addEventListener('input', function(e) {
+            const url = e.target.value;
+            if (url) {
+                const preview = document.getElementById('image-preview');
+                const previewImg = document.getElementById('preview-img');
+                previewImg.src = url;
+                previewImg.onerror = function() {
+                    preview.classList.add('hidden');
+                };
+                previewImg.onload = function() {
+                    preview.classList.remove('hidden');
+                };
+            }
+        });
+
+        // Initialize app - Start with authentication
+        document.addEventListener('DOMContentLoaded', function() {
+            // Always start with login page
+            showLoginForm();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b60a96c1f6405b',t:'MTc1OTkzMDczNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
